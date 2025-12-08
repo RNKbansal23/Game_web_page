@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
       - name: fibonacci-app
-        image: your-dockerhub-username/fibonacci-app:latest
+        image: rnkbansal/fibonacci-app:latest
         ports:
         - containerPort: 5000
