@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fibonacci-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fibonacci
+  template:
+    metadata:
+      labels:
+        app: fibonacci
+    spec:
+      containers:
+      - name: fibonacci-app
+        image: your-dockerhub-username/fibonacci-app:latest
+        ports:
+        - containerPort: 5000
