@@ -37,19 +37,23 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                script {
-                    echo "Deploying new image to Kubernetes..."
-                    // Use 'bat' for Windows command prompt
-                    bat "kubectl set image deployment/fibonacci-app fibonacci-app=${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}"
+                // This 'withCredentials' block is the new part.
+                // It finds the secret file with the ID 'kubeconfig' and creates an environment
+                // variable named 'KUBECONFIG' that contains the path to that secret file.
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    script {
+                        echo "Deploying new image to Kubernetes..."
+                        
+                        // Because the KUBECONFIG variable is now set, these kubectl commands
+                        // will automatically find and use it for authentication.
+                        bat "kubectl set image deployment/fibonacci-app fibonacci-app=${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}"
 
-                    echo "Waiting for deployment to complete..."
-                    // Use 'bat' for Windows command prompt
-                    bat "kubectl rollout status deployment/fibonacci-app"
+                        echo "Waiting for deployment to complete..."
+                        bat "kubectl rollout status deployment/fibonacci-app"
+                    }
                 }
             }
         }
-    }
-
     post {
         always {
             echo "Logging out of Docker Hub..."
