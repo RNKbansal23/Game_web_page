@@ -15,5 +15,6 @@ spec:
       containers:
       - name: fibonacci-app
         image: rnkbansal/fibonacci-app:latest
+        imagePullPolicy: IfNotPresent  
         ports:
         - containerPort: 5000
