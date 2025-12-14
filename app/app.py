@@ -1,8 +1,8 @@
 from flask import Flask, render_template, request
-from prometheus_flask_exporter import PrometheusMetrices
+from prometheus_flask_exporter import PrometheusMetrics
 
 app = Flask(__name__)
-metrices = PrometheusMetrices(app)
+metrices = PrometheusMetrics(app)
 
 def fibonacci(n):
     if n <= 0:

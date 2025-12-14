@@ -6,26 +6,26 @@ data:
   prometheus.yml: |
     global:
       scrape_interval: 15s
+
     scrape_configs:
+      # This job still scrapes Prometheus itself.
       - job_name: 'prometheus'
         static_configs:
           - targets: ['localhost:9090']
-    
+
+      # This new job uses Kubernetes Service Discovery to find all pods
+      # and scrapes any that have the 'prometheus.io/scrape: true' annotation.
       - job_name: 'kubernetes-pods'
         kubernetes_sd_configs:
           - role: pod
         relabel_configs:
-          # This filter tells Prometheus to only keep pods that have
-          # the 'prometheus.io/scrape: true' annotation.
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
             action: keep
             regex: true
-          # This part takes the path from the annotation and sets it correctly.
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
             action: replace
             target_label: __metrics_path__
             regex: (.+)
-          # This part builds the correct address to scrape.
           - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
             action: replace
             regex: ([^:]+)(?::\d+)?;(\d+)
