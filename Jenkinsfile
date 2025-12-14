@@ -39,21 +39,20 @@ pipeline {
             }
         }
 
-        stage('Deploy to Kubernetes') {
+       stage('Deploy to Kubernetes') {
             steps {
-                // This is the crucial block for Kubernetes authentication on Windows.
-                // It finds the secret file with the ID 'kubeconfig' and creates an environment
-                // variable named 'KUBECONFIG' that contains the path to that secret file.
+                // This block still correctly loads the secret file and provides its path in the KUBECONFIG variable.
                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                     script {
                         echo "Deploying new image to Kubernetes..."
                         
-                        // Because the KUBECONFIG variable is now set, these kubectl commands
-                        // will automatically find and use it for authentication.
-                        bat "kubectl set image deployment/fibonacci-app fibonacci-app=${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}"
+                        // THIS IS THE FIX: We explicitly tell kubectl where to find its config
+                        // by using the --kubeconfig flag and passing the variable.
+                        bat "kubectl --kubeconfig=%KUBECONFIG% set image deployment/fibonacci-app fibonacci-app=${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}"
 
                         echo "Waiting for deployment to complete..."
-                        bat "kubectl rollout status deployment/fibonacci-app"
+                        // We do the same for the second command.
+                        bat "kubectl --kubeconfig=%KUBECONFIG% rollout status deployment/fibonacci-app"
                     }
                 }
             }
