@@ -1,10 +1,8 @@
 pipeline {
-    agent any // This means Jenkins can use any available agent/node to run this pipeline.
+    agent any
 
     environment {
-        // Sets a variable for your Docker Hub username.
         DOCKERHUB_USERNAME = "rnkbansal"
-        // The name of the image you will build and push.
         DOCKER_IMAGE_NAME = "${DOCKERHUB_USERNAME}/fibonacci-app"
     }
 
@@ -19,8 +17,8 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker image: ${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}"
-                    // Use 'sh' for Linux shell commands.
-                    sh "docker build -t ${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER} ."
+                    // Use 'bat' for Windows command prompt
+                    bat "docker build -t ${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER} ."
                 }
             }
         }
@@ -29,10 +27,9 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     echo "Logging in to Docker Hub and pushing image..."
-                    // Use 'sh' and Linux-style $VAR for environment variables.
-                    sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
-                    // The docker push command.
-                    sh "docker push ${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}"
+                    // Use 'bat' and Windows-style %VAR% for variables
+                    bat "echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin"
+                    bat "docker push ${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}"
                 }
             }
         }
@@ -42,11 +39,11 @@ pipeline {
                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                     script {
                         echo "Deploying new image to Kubernetes..."
-                        // Use 'sh' for Linux shell commands.
-                        sh "kubectl --kubeconfig=$KUBECONFIG set image deployment/fibonacci-app fibonacci-app=${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}"
+                        // Use 'bat' and explicitly pass the kubeconfig path
+                        bat "kubectl --kubeconfig=%KUBECONFIG% set image deployment/fibonacci-app fibonacci-app=${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}"
 
                         echo "Waiting for deployment to complete..."
-                        sh "kubectl --kubeconfig=$KUBECONFIG rollout status deployment/fibonacci-app"
+                        bat "kubectl --kubeconfig=%KUBECONFIG% rollout status deployment/fibonacci-app"
                     }
                 }
             }
@@ -56,8 +53,8 @@ pipeline {
     post {
         always {
             echo "Logging out of Docker Hub..."
-            // Use 'sh' for Linux shell commands.
-            sh "docker logout"
+            // Use 'bat' for Windows command prompt
+            bat "docker logout"
         }
     }
 }
