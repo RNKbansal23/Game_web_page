@@ -11,6 +11,7 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
+                // This command checks out the code from the GitHub repository that triggered the build.
                 checkout scm
             }
         }
@@ -45,11 +46,13 @@ pipeline {
                     script {
                         echo "Deploying new image to Kubernetes..."
                         
-                        // Use 'sh' and explicitly pass the kubeconfig path using the $KUBECONFIG variable.
-                        sh "kubectl --kubeconfig=$KUBECONFIG set image deployment/fibonacci-app fibonacci-app=${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}"
+                        // FIX ADDED HERE: --insecure-skip-tls-verify=true
+                        // This forces kubectl to trust the certificate even though the IP address changed to host.docker.internal
+                        sh "kubectl --insecure-skip-tls-verify=true --kubeconfig=$KUBECONFIG set image deployment/fibonacci-app fibonacci-app=${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}"
 
                         echo "Waiting for deployment to complete..."
-                        sh "kubectl --kubeconfig=$KUBECONFIG rollout status deployment/fibonacci-app"
+                        // FIX ADDED HERE: --insecure-skip-tls-verify=true
+                        sh "kubectl --insecure-skip-tls-verify=true --kubeconfig=$KUBECONFIG rollout status deployment/fibonacci-app"
                     }
                 }
             }
